@@ -20,6 +20,29 @@ PasteSync is a minimal shared paste for moving text between phone and desktop.
 - health endpoint for containers and orchestrators
 - no access logs for `/healthz`
 - multistage Docker image with distroless non-root runtime
+- browser favicon support for desktop browsers on Windows and Linux
+- Android web app icons and manifest support
+
+## Icons
+
+- Browser assets live in `web/` and are served directly by the app.
+- Raw-linkable SVG assets live in `icons/`.
+- Recommended gethomepage icon: `icons/pastesync-homepage.svg`
+
+Example raw SVG URL:
+
+`https://raw.githubusercontent.com/zewelor/pastesync/main/icons/pastesync-homepage.svg`
+
+Example gethomepage entry:
+
+```yaml
+- Utilities:
+    - PasteSync:
+        href: https://pastesync.example.com
+        description: Single shared paste
+        icon: https://raw.githubusercontent.com/zewelor/pastesync/main/icons/pastesync-homepage.svg
+        ping: https://pastesync.example.com/healthz
+```
 
 ## Limitations
 

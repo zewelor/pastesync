@@ -153,6 +153,12 @@ func (a *app) routes() http.Handler {
 	mux.HandleFunc("GET /api/events", a.handleEvents)
 	mux.Handle("GET /{$}", noStore(fileServer("web/index.html", "text/html; charset=utf-8")))
 	mux.Handle("GET /app.js", noStore(fileServer("web/app.js", "application/javascript; charset=utf-8")))
+	mux.Handle("GET /favicon.ico", noStore(fileServer("web/favicon.ico", "image/x-icon")))
+	mux.Handle("GET /favicon.svg", noStore(fileServer("web/favicon.svg", "image/svg+xml")))
+	mux.Handle("GET /site.webmanifest", noStore(fileServer("web/site.webmanifest", "application/manifest+json; charset=utf-8")))
+	mux.Handle("GET /android-chrome-192x192.png", noStore(fileServer("web/android-chrome-192x192.png", "image/png")))
+	mux.Handle("GET /android-chrome-512x512.png", noStore(fileServer("web/android-chrome-512x512.png", "image/png")))
+	mux.Handle("GET /maskable-icon-512x512.png", noStore(fileServer("web/maskable-icon-512x512.png", "image/png")))
 	mux.Handle("GET /styles.css", noStore(fileServer("web/styles.css", "text/css; charset=utf-8")))
 	return securityHeaders(requestLogger(mux))
 }

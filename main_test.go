@@ -128,3 +128,38 @@ func TestSSEReceivesUpdate(t *testing.T) {
 		}
 	}
 }
+
+func TestStaticIconAssets(t *testing.T) {
+	app := newApp(time.Hour, time.Minute, 1024)
+	server := httptest.NewServer(app.routes())
+	defer server.Close()
+
+	tests := []struct {
+		path        string
+		contentType string
+	}{
+		{path: "/favicon.ico", contentType: "image/x-icon"},
+		{path: "/favicon.svg", contentType: "image/svg+xml"},
+		{path: "/site.webmanifest", contentType: "application/manifest+json"},
+		{path: "/android-chrome-192x192.png", contentType: "image/png"},
+		{path: "/android-chrome-512x512.png", contentType: "image/png"},
+		{path: "/maskable-icon-512x512.png", contentType: "image/png"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			resp, err := http.Get(server.URL + tt.path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("expected 200, got %d", resp.StatusCode)
+			}
+			if got := resp.Header.Get("Content-Type"); !strings.Contains(got, tt.contentType) {
+				t.Fatalf("expected content type containing %q, got %q", tt.contentType, got)
+			}
+		})
+	}
+}
