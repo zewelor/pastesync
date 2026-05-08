@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PasteSync</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="statusbar">
+        <div class="title">PasteSync</div>
+        <div id="status" class="status">Connecting</div>
+      </header>
+      <textarea id="editor" class="editor" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste here" readonly></textarea>
+      <footer class="footer">
+        <span>Single shared paste</span>
+        <span id="meta">Auto-clear after inactivity</span>
+      </footer>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+  </html>

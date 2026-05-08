@@ -1,0 +1,15 @@
+services:
+  pastesync:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      PASTE_TTL: "24h"
+      MAX_BODY_BYTES: "262144"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
