@@ -14,6 +14,7 @@ permissions:
 
 env:
   IMAGE_NAME: ghcr.io/zewelor/pastesync
+  OLD_IMAGE_VERSIONS_TO_KEEP: 30
 
 jobs:
   docker:
@@ -66,3 +67,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Delete old images
+        if: github.event_name != 'pull_request'
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          min-versions-to-keep: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
+          ignore-versions: '^latest$'
