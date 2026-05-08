@@ -51,8 +51,7 @@ Example durations:
 ## Local Validation
 
 ```bash
-docker run --rm -v "$PWD:/src" -w /src golang:1.24 \
-  sh -lc "/usr/local/go/bin/gofmt -w main.go main_test.go && /usr/local/go/bin/go test ./... && /usr/local/go/bin/go build -buildvcs=false ./..."
+docker build --target validate .
 ```
 
 ## Docker
@@ -61,6 +60,8 @@ docker run --rm -v "$PWD:/src" -w /src golang:1.24 \
 docker build -t pastesync .
 docker run --rm -p 8080:8080 pastesync
 ```
+
+The Dockerfile uses `go.mod` as the Go version source of truth.
 
 ## Docker Compose
 

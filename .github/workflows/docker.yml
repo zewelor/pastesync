@@ -47,6 +47,15 @@ jobs:
             type=ref,event=tag
             type=sha,prefix=sha-
 
+      - name: Validate build inputs
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: validate
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:

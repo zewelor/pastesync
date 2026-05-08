@@ -4,7 +4,6 @@
 README.md
 docs
 compose.yaml
-*_test.go
 *.md
 pastesync
 justfile
