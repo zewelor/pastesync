@@ -1,8 +1,23 @@
 :root {
   color-scheme: light;
+  --bg: #f6f4ef;
+  --panel: #fffefa;
+  --panel-soft: #ebe7dc;
+  --text: #191a16;
+  --muted: #63665f;
+  --line: #d9d5ca;
+  --focus: #237c8a;
+  --saved-bg: #dceee7;
+  --saved-fg: #17533f;
+  --dirty-bg: #f3e6c5;
+  --dirty-fg: #6b4d08;
+  --saving-bg: #dce8f3;
+  --saving-fg: #1d4f73;
+  --error-bg: #f4d8d5;
+  --error-fg: #862b22;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #efe7da;
-  color: #221d18;
+  background: var(--bg);
+  color: var(--text);
 }
 
 * {
@@ -17,18 +32,16 @@ body {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.75), transparent 28%),
-    linear-gradient(180deg, #efe7da 0%, #e3d5c1 100%);
+  background: var(--bg);
 }
 
 .shell {
   display: grid;
   grid-template-rows: auto 1fr auto;
   min-height: 100vh;
-  max-width: 980px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 12px;
+  padding: 14px;
   gap: 10px;
 }
 
@@ -38,57 +51,150 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
-  border: 1px solid rgba(34, 29, 24, 0.14);
-  border-radius: 14px;
-  background: rgba(255, 250, 242, 0.78);
-  backdrop-filter: blur(10px);
+  color: var(--muted);
+}
+
+.statusbar {
+  min-height: 40px;
+}
+
+.footer {
+  min-height: 34px;
+  font-size: 0.84rem;
 }
 
 .title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--text);
+  font-size: 0.94rem;
+  font-weight: 750;
+  letter-spacing: 0;
 }
 
-.status,
-.footer {
-  font-size: 0.86rem;
-  color: #5d5348;
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  max-width: 52vw;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.status[data-state="saved"] {
+  background: var(--saved-bg);
+  color: var(--saved-fg);
+}
+
+.status[data-state="dirty"] {
+  background: var(--dirty-bg);
+  color: var(--dirty-fg);
+}
+
+.status[data-state="saving"] {
+  background: var(--saving-bg);
+  color: var(--saving-fg);
+}
+
+.status[data-state="error"] {
+  background: var(--error-bg);
+  color: var(--error-fg);
 }
 
 .editor {
   width: 100%;
   min-height: 0;
   resize: none;
-  border: 1px solid rgba(34, 29, 24, 0.14);
-  border-radius: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   padding: 18px;
-  background: rgba(255, 252, 247, 0.92);
+  background: var(--panel);
   color: inherit;
-  font: 400 16px/1.55 "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 400 16px/1.58 "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   outline: none;
-  box-shadow: 0 18px 50px rgba(78, 58, 34, 0.08);
+  box-shadow: 0 10px 32px rgba(25, 26, 22, 0.05);
+}
+
+.editor::placeholder {
+  color: color-mix(in srgb, var(--muted) 65%, transparent);
 }
 
 .editor:focus {
-  border-color: rgba(110, 80, 42, 0.45);
-  box-shadow: 0 18px 50px rgba(78, 58, 34, 0.12);
+  border-color: var(--focus);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--focus) 18%, transparent),
+    0 10px 32px rgba(25, 26, 22, 0.06);
+}
+
+.editor:read-only {
+  color: var(--muted);
 }
 
 @media (max-width: 640px) {
   .shell {
     padding: 10px;
+    gap: 8px;
   }
 
   .statusbar,
-  .footer,
-  .editor {
-    border-radius: 16px;
+  .footer {
+    align-items: flex-start;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .status {
+    max-width: 48vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .editor {
     padding: 14px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #141512;
+    --panel: #1d1e1a;
+    --panel-soft: #2a2c26;
+    --text: #f2f0e8;
+    --muted: #a9aa9f;
+    --line: #34362f;
+    --focus: #58b7c4;
+    --saved-bg: #17362c;
+    --saved-fg: #9ce2c6;
+    --dirty-bg: #3c331a;
+    --dirty-fg: #e8cc79;
+    --saving-bg: #1c3346;
+    --saving-fg: #9dcced;
+    --error-bg: #47221f;
+    --error-fg: #f0aaa2;
+  }
+
+  .editor {
+    box-shadow: none;
+  }
+
+  .editor:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
   }
 }

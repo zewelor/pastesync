@@ -129,6 +129,11 @@ type pastePayload struct {
 	Content string `json:"content"`
 }
 
+type configPayload struct {
+	MaxBodyBytes int64 `json:"maxBodyBytes"`
+	TTLSeconds   int64 `json:"ttlSeconds"`
+}
+
 type app struct {
 	store           *pasteStore
 	maxBodyBytes    int64
@@ -148,6 +153,7 @@ func newApp(ttl, cleanupInterval time.Duration, maxBodyBytes int64) *app {
 func (a *app) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", a.handleHealthz)
+	mux.HandleFunc("GET /api/config", a.handleGetConfig)
 	mux.HandleFunc("GET /api/paste", a.handleGetPaste)
 	mux.HandleFunc("PUT /api/paste", a.handlePutPaste)
 	mux.HandleFunc("GET /api/events", a.handleEvents)
@@ -207,6 +213,13 @@ func requestLogger(next http.Handler) http.Handler {
 
 func (a *app) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (a *app) handleGetConfig(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, configPayload{
+		MaxBodyBytes: a.maxBodyBytes,
+		TTLSeconds:   int64(a.ttl.Seconds()),
+	})
 }
 
 func (a *app) handleGetPaste(w http.ResponseWriter, r *http.Request) {

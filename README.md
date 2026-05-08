@@ -17,6 +17,7 @@ PasteSync is a minimal shared paste for moving text between phone and desktop.
 - autosave with a short debounce
 - live sync through Server-Sent Events
 - TTL based on the last change time
+- UI-visible paste size and TTL configuration
 - health endpoint for containers and orchestrators
 - no access logs for `/healthz`
 - multistage Docker image with distroless non-root runtime
@@ -57,6 +58,8 @@ Example gethomepage entry:
 - `PASTE_TTL`: inactivity timeout before the paste is cleared, default `24h`
 - `CLEANUP_INTERVAL`: optional override for cleanup checks
 - `MAX_BODY_BYTES`: request size limit for `PUT /api/paste`, default `262144`
+
+The web UI reads `GET /api/config` to display the active TTL and body-size limit.
 
 If `CLEANUP_INTERVAL` is not set, it is derived automatically from `PASTE_TTL`:
 

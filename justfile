@@ -1,3 +1,6 @@
+up:
+  docker compose run --rm --service-ports pastesync
+
 docker_build:
   docker compose build --no-cache
 
