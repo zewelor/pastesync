@@ -9,7 +9,6 @@ let config = {
   ttlSeconds: 86400
 };
 let currentRevision = -1;
-let lastUpdatedAt = null;
 let isApplyingRemote = false;
 let saveTimer = null;
 let retryTimer = null;
@@ -65,17 +64,11 @@ function isTooLarge(content) {
   return bodyBytes(content) > config.maxBodyBytes;
 }
 
-function updateMeta(updatedAt = lastUpdatedAt) {
+function updateMeta() {
   const limit = formatBytes(config.maxBodyBytes);
   const ttl = formatTTL(config.ttlSeconds);
 
-  if (!updatedAt) {
-    metaEl.textContent = `${ttl} - ${limit} limit`;
-    return;
-  }
-
-  const date = new Date(updatedAt);
-  metaEl.textContent = `Last change ${date.toLocaleString()} - ${ttl} - ${limit} limit`;
+  metaEl.textContent = `${ttl} - ${limit} limit`;
 }
 
 async function loadConfig() {
@@ -123,13 +116,12 @@ function applySnapshot(snapshot, markRemote = true, force = false) {
     return;
   }
   currentRevision = snapshot.revision;
-  lastUpdatedAt = snapshot.updatedAt;
   isApplyingRemote = true;
   editor.value = snapshot.content || '';
   isApplyingRemote = false;
   dirty = false;
   pendingRemoteSnapshot = null;
-  updateMeta(snapshot.updatedAt);
+  updateMeta();
   if (markRemote) {
     setStatus('Synced', 'saved');
   }
@@ -191,8 +183,7 @@ async function savePaste() {
     const hasNewLocalEdits = localEditVersion !== submittedEditVersion;
 
     currentRevision = Math.max(currentRevision, snapshot.revision);
-    lastUpdatedAt = snapshot.updatedAt;
-    updateMeta(snapshot.updatedAt);
+    updateMeta();
 
     if (hasNewLocalEdits) {
       dirty = true;
@@ -263,8 +254,7 @@ function connectEvents() {
       return;
     }
     currentRevision = snapshot.revision;
-    lastUpdatedAt = snapshot.updatedAt;
-    updateMeta(snapshot.updatedAt);
+    updateMeta();
   });
 }
 

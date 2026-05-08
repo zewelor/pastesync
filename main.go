@@ -26,9 +26,8 @@ const (
 )
 
 type pasteSnapshot struct {
-	Content   string    `json:"content"`
-	Revision  uint64    `json:"revision"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	Content  string `json:"content"`
+	Revision uint64 `json:"revision"`
 }
 
 type pasteStore struct {
@@ -48,9 +47,8 @@ func newPasteStore() *pasteStore {
 
 func (s *pasteStore) snapshotLocked() pasteSnapshot {
 	return pasteSnapshot{
-		Content:   s.content,
-		Revision:  s.revision,
-		UpdatedAt: s.updatedAt,
+		Content:  s.content,
+		Revision: s.revision,
 	}
 }
 
