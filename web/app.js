@@ -1,6 +1,8 @@
 const editor = document.getElementById('editor');
 const statusEl = document.getElementById('status');
 const metaEl = document.getElementById('meta');
+const copyButton = document.getElementById('copyButton');
+const clearButton = document.getElementById('clearButton');
 
 const encoder = new TextEncoder();
 
@@ -27,33 +29,21 @@ function unlockEditor() {
   editor.readOnly = false;
 }
 
-function formatBytes(bytes) {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${Math.round(bytes / 1024)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function updateContentButtons() {
+  const isEmpty = editor.value.length === 0;
+  copyButton.disabled = isEmpty || !canCopy();
+  clearButton.disabled = isEmpty;
 }
 
-function formatTTL(seconds) {
-  if (!seconds || seconds <= 0) {
-    return 'no auto-clear';
-  }
-  if (seconds % 86400 === 0) {
-    const days = seconds / 86400;
-    return `${days}d auto-clear`;
-  }
-  if (seconds % 3600 === 0) {
-    const hours = seconds / 3600;
-    return `${hours}h auto-clear`;
-  }
-  if (seconds % 60 === 0) {
-    const minutes = seconds / 60;
-    return `${minutes}m auto-clear`;
-  }
-  return `${seconds}s auto-clear`;
+function setEditorValue(content) {
+  isApplyingRemote = true;
+  editor.value = content;
+  isApplyingRemote = false;
+  updateContentButtons();
+}
+
+function canCopy() {
+  return window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText;
 }
 
 function bodyBytes(content) {
@@ -65,10 +55,20 @@ function isTooLarge(content) {
 }
 
 function updateMeta() {
-  const limit = formatBytes(config.maxBodyBytes);
-  const ttl = formatTTL(config.ttlSeconds);
+  const seconds = config.ttlSeconds;
+  if (!seconds || seconds <= 0) {
+    metaEl.textContent = 'no auto-clear';
+    return;
+  }
 
-  metaEl.textContent = `${ttl} - ${limit} limit`;
+  for (const [unit, size] of [['d', 86400], ['h', 3600], ['m', 60]]) {
+    if (seconds % size === 0) {
+      metaEl.textContent = `${seconds / size}${unit} auto-clear`;
+      return;
+    }
+  }
+
+  metaEl.textContent = `${seconds}s auto-clear`;
 }
 
 async function loadConfig() {
@@ -116,9 +116,7 @@ function applySnapshot(snapshot, markRemote = true, force = false) {
     return;
   }
   currentRevision = snapshot.revision;
-  isApplyingRemote = true;
-  editor.value = snapshot.content || '';
-  isApplyingRemote = false;
+  setEditorValue(snapshot.content || '');
   dirty = false;
   pendingRemoteSnapshot = null;
   updateMeta();
@@ -260,8 +258,36 @@ function connectEvents() {
 
 editor.addEventListener('input', () => {
   localEditVersion += 1;
+  updateContentButtons();
   scheduleSave();
 });
+
+copyButton.addEventListener('click', async () => {
+  if (!canCopy()) {
+    setStatus('Copy blocked', 'error');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(editor.value);
+    setStatus('Copied', dirty ? 'dirty' : 'saved');
+  } catch {
+    setStatus('Copy blocked', 'error');
+  }
+});
+
+clearButton.addEventListener('click', () => {
+  if (editor.value.length === 0) {
+    return;
+  }
+
+  setEditorValue('');
+  localEditVersion += 1;
+  scheduleSave();
+  editor.focus();
+});
+
+updateContentButtons();
 
 window.addEventListener('online', () => {
   if (dirty && !isTooLarge(editor.value)) {

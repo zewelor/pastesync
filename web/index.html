@@ -16,9 +16,12 @@
         <div class="title">PasteSync</div>
         <div id="status" class="status" data-state="saving" aria-live="polite">Connecting</div>
       </header>
-      <textarea id="editor" class="editor" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste here" readonly></textarea>
+      <textarea id="editor" class="editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="Paste here" readonly></textarea>
       <footer class="footer">
-        <span>Single shared paste</span>
+        <div class="actions" aria-label="Clipboard actions">
+          <button id="copyButton" class="action" type="button">Copy</button>
+          <button id="clearButton" class="action" type="button">Clear</button>
+        </div>
         <span id="meta">Auto-clear after inactivity</span>
       </footer>
     </main>
