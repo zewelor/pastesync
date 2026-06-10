@@ -1,19 +1,30 @@
+# Version control
 .git
-.gitignore
 .github
-README.md
-docs
-compose.yaml
+.gitignore
+
+# Documentation
 *.md
-pastesync
+docs
+
+# CI/CD and configuration
+*.yaml
+*.yml
+*.toml
 justfile
-.dockerignore
+LICENSE
+
+# Local binaries and build outputs
+pastesync
 tmp
 dist
 coverage.out
 *.log
-Dockerfile*
-!Dockerfile
+
+# Design and raw assets
+icons
+
+# IDE and OS files
 **/.DS_Store
 **/node_modules
 **/.idea
