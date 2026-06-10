@@ -82,7 +82,6 @@ func TestPutThenGetPaste(t *testing.T) {
 	}
 }
 
-
 func TestPutPasteRejectsOversizedBody(t *testing.T) {
 	app := newApp(time.Hour, time.Minute, 32)
 	server := httptest.NewServer(app.routes())

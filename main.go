@@ -127,8 +127,6 @@ type pastePayload struct {
 	Content string `json:"content"`
 }
 
-
-
 type app struct {
 	store           *pasteStore
 	maxBodyBytes    int64
@@ -209,8 +207,6 @@ func requestLogger(next http.Handler) http.Handler {
 func (a *app) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
-
-
 
 func (a *app) handleGetPaste(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, a.store.snapshot())
