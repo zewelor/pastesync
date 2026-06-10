@@ -3,11 +3,7 @@ const statusEl = document.getElementById('status');
 const copyButton = document.getElementById('copyButton');
 const clearButton = document.getElementById('clearButton');
 
-const encoder = new TextEncoder();
 
-let config = {
-  maxBodyBytes: 262144
-};
 let currentRevision = -1;
 let isApplyingRemote = false;
 let saveTimer = null;
@@ -44,21 +40,7 @@ function canCopy() {
   return window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText;
 }
 
-function bodyBytes(content) {
-  return encoder.encode(JSON.stringify({ content })).length;
-}
 
-function isTooLarge(content) {
-  return bodyBytes(content) > config.maxBodyBytes;
-}
-
-async function loadConfig() {
-  const response = await fetch('/api/config', { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error('config load failed');
-  }
-  config = await response.json();
-}
 
 async function loadPaste() {
   const response = await fetch('/api/paste', { cache: 'no-store' });
@@ -84,7 +66,7 @@ function scheduleQueuedSave(delay = 350) {
 function scheduleRetry(delay = 1500) {
   window.clearTimeout(retryTimer);
   retryTimer = window.setTimeout(() => {
-    if (dirty && !isTooLarge(editor.value)) {
+    if (dirty) {
       setStatus('Retrying', 'saving');
       savePaste().catch(() => markSaveFailed());
     }
@@ -125,12 +107,6 @@ function markSaveFailed() {
 async function savePaste() {
   if (saveInFlight) {
     queuedSave = true;
-    return;
-  }
-
-  if (isTooLarge(editor.value)) {
-    dirty = true;
-    setStatus('Too large', 'error');
     return;
   }
 
@@ -189,12 +165,6 @@ function scheduleSave() {
   }
   dirty = true;
   window.clearTimeout(retryTimer);
-
-  if (isTooLarge(editor.value)) {
-    window.clearTimeout(saveTimer);
-    setStatus('Too large', 'error');
-    return;
-  }
 
   setStatus(pendingRemoteSnapshot ? 'Remote update pending' : 'Unsaved', 'dirty');
   scheduleQueuedSave();
@@ -267,7 +237,7 @@ clearButton.addEventListener('click', () => {
 updateContentButtons();
 
 window.addEventListener('online', () => {
-  if (dirty && !isTooLarge(editor.value)) {
+  if (dirty) {
     setStatus('Retrying', 'saving');
     scheduleQueuedSave(0);
   }
@@ -279,11 +249,10 @@ window.addEventListener('offline', () => {
   }
 });
 
-Promise.allSettled([loadConfig(), loadPaste()])
-  .then((results) => {
+loadPaste()
+  .then(() => {
     unlockEditor();
-    const failed = results.some((result) => result.status === 'rejected');
-    setStatus(failed ? 'Load failed' : 'Ready', failed ? 'error' : 'idle');
+    setStatus('Ready', 'idle');
     connectEvents();
   })
   .catch(() => {
@@ -294,7 +263,7 @@ Promise.allSettled([loadConfig(), loadPaste()])
 
 window.addEventListener('beforeunload', () => {
   clearTimers();
-  if (dirty && !isTooLarge(editor.value)) {
+  if (dirty) {
     fetch('/api/paste', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

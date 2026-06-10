@@ -82,28 +82,6 @@ func TestPutThenGetPaste(t *testing.T) {
 	}
 }
 
-func TestGetConfig(t *testing.T) {
-	app := newApp(90*time.Second, time.Minute, 2048)
-	server := httptest.NewServer(app.routes())
-	defer server.Close()
-
-	resp, err := http.Get(server.URL + "/api/config")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	var config configPayload
-	if err := json.NewDecoder(resp.Body).Decode(&config); err != nil {
-		t.Fatal(err)
-	}
-	if config.MaxBodyBytes != 2048 {
-		t.Fatalf("expected max body bytes 2048, got %d", config.MaxBodyBytes)
-	}
-	if config.TTLSeconds != 90 {
-		t.Fatalf("expected ttl seconds 90, got %d", config.TTLSeconds)
-	}
-}
 
 func TestPutPasteRejectsOversizedBody(t *testing.T) {
 	app := newApp(time.Hour, time.Minute, 32)

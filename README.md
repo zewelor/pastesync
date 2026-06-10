@@ -59,8 +59,6 @@ Example gethomepage entry:
 - `CLEANUP_INTERVAL`: optional override for cleanup checks
 - `MAX_BODY_BYTES`: request size limit for `PUT /api/paste`, default `262144`
 
-The web UI reads `GET /api/config` to display the active TTL and body-size limit.
-
 If `CLEANUP_INTERVAL` is not set, it is derived automatically from `PASTE_TTL`:
 
 - formula: `max(15s, min(30m, PASTE_TTL / 288))`
