@@ -6,6 +6,10 @@ WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 
+# BuildKit cache mounts (e.g. --mount=type=cache,target=/go/pkg/mod and
+# /root/.cache/go-build) are deliberately omitted: go.mod has no external
+# dependencies and the COPY go.mod + go mod download layer already caches
+# correctly. Revisit this decision if external dependencies are added.
 FROM deps AS validate
 COPY main.go main_test.go ./
 COPY web ./web
