@@ -1,14 +1,12 @@
 const editor = document.getElementById('editor');
 const statusEl = document.getElementById('status');
-const metaEl = document.getElementById('meta');
 const copyButton = document.getElementById('copyButton');
 const clearButton = document.getElementById('clearButton');
 
 const encoder = new TextEncoder();
 
 let config = {
-  maxBodyBytes: 262144,
-  ttlSeconds: 86400
+  maxBodyBytes: 262144
 };
 let currentRevision = -1;
 let isApplyingRemote = false;
@@ -54,30 +52,12 @@ function isTooLarge(content) {
   return bodyBytes(content) > config.maxBodyBytes;
 }
 
-function updateMeta() {
-  const seconds = config.ttlSeconds;
-  if (!seconds || seconds <= 0) {
-    metaEl.textContent = 'no auto-clear';
-    return;
-  }
-
-  for (const [unit, size] of [['d', 86400], ['h', 3600], ['m', 60]]) {
-    if (seconds % size === 0) {
-      metaEl.textContent = `${seconds / size}${unit} auto-clear`;
-      return;
-    }
-  }
-
-  metaEl.textContent = `${seconds}s auto-clear`;
-}
-
 async function loadConfig() {
   const response = await fetch('/api/config', { cache: 'no-store' });
   if (!response.ok) {
     throw new Error('config load failed');
   }
   config = await response.json();
-  updateMeta();
 }
 
 async function loadPaste() {
@@ -119,7 +99,6 @@ function applySnapshot(snapshot, markRemote = true, force = false) {
   setEditorValue(snapshot.content || '');
   dirty = false;
   pendingRemoteSnapshot = null;
-  updateMeta();
   if (markRemote) {
     setStatus('Synced', 'saved');
   }
@@ -181,7 +160,6 @@ async function savePaste() {
     const hasNewLocalEdits = localEditVersion !== submittedEditVersion;
 
     currentRevision = Math.max(currentRevision, snapshot.revision);
-    updateMeta();
 
     if (hasNewLocalEdits) {
       dirty = true;
@@ -252,7 +230,6 @@ function connectEvents() {
       return;
     }
     currentRevision = snapshot.revision;
-    updateMeta();
   });
 }
 
