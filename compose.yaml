@@ -13,3 +13,13 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+
+  gofmt:
+    build:
+      context: .
+      target: base
+    network_mode: none
+    volumes:
+      - .:/src
+    working_dir: /src
+    entrypoint: ["gofmt"]

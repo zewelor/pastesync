@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: go-fmt
+        name: go fmt (docker)
+        entry: docker compose run --rm -T gofmt -w
+        language: system
+        types: [go]
+        pass_filenames: true

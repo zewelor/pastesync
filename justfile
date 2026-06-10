@@ -6,3 +6,6 @@ docker_build:
 
 test_dockerignore:
   rsync -avn . /dev/shm --exclude-from .dockerignore
+
+setup:
+  pre-commit install

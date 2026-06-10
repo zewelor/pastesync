@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1 AS base
+FROM --platform=$BUILDPLATFORM golang:1.26 AS base
 ENV GOTOOLCHAIN=local
 
 FROM base AS validate
@@ -7,7 +7,6 @@ COPY go.mod ./
 RUN go mod download
 COPY main.go main_test.go ./
 COPY web ./web
-RUN test -z "$(gofmt -l main.go main_test.go)"
 RUN go test ./...
 RUN CGO_ENABLED=0 go build -buildvcs=false -trimpath ./...
 
