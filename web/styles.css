@@ -63,6 +63,7 @@ body {
 .footer {
   min-height: 34px;
   font-size: 0.84rem;
+  justify-content: space-between;
 }
 
 .actions {
@@ -199,7 +200,6 @@ body {
   .footer {
     position: sticky;
     bottom: 0;
-    justify-content: flex-start;
     gap: 10px;
     padding-top: 2px;
     background: var(--bg);
