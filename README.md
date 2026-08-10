@@ -148,7 +148,7 @@ just setup
 | :--- | :--- |
 | `just up` | Build and start the container locally at `http://localhost:8080` |
 | `just docker_build` | Force rebuild the container image without cache |
-| `just test_dockerignore` | Preview files excluded from the Docker build context |
+| `just show_dockerignore` | Preview files excluded from the Docker build context |
 
 ### Manual Docker Validation
 
