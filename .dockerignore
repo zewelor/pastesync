@@ -1,31 +1,27 @@
-# Version control
-.git
-.github
-.gitignore
+# Ignore all hidden files and directories (.git, .github, .vscode, .env)
+.*
 
-# Documentation
+# Documentation and repository config
 *.md
-docs
-
-# CI/CD and configuration
-*.yaml
-*.yml
-*.toml
+docs/
+icons/
+Dockerfile*
+compose*.yaml
+compose*.yml
+docker-compose*.yml
 justfile
+Justfile
 LICENSE
 
-# Local binaries and build outputs
-pastesync
-tmp
-dist
-coverage.out
+# Local binaries, test artifacts, and build outputs
+*.test
+*.prof
+tmp/
+dist/
+coverage/
 *.log
 
-# Design and raw assets
-icons
+# NOTE: Do NOT ignore *_test.go files here! (Required by Dockerfile validate stage)
 
-# IDE and OS files
-**/.DS_Store
-**/node_modules
-**/.idea
-**/.vscode
+# Local binary
+pastesync
