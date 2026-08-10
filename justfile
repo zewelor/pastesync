@@ -22,7 +22,7 @@ test_dockerignore:
   COPY . /context
   EOF
 
-  find "$test_dir/context/context" -type f -print |
+  find "$test_dir/context/context" \( -type f -o -type l \) -print |
     sed "s#^$test_dir/context/context/##" |
     sort > "$test_dir/included"
 

@@ -5,10 +5,11 @@
 *.md
 docs/
 icons/
+/*.toml
+/*.yml
+/*.yaml
+/*.json
 Dockerfile*
-compose*.yaml
-compose*.yml
-docker-compose*.yml
 justfile
 Justfile
 LICENSE
