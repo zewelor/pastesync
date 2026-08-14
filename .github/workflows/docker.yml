@@ -117,9 +117,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=build-${{ github.ref_name }}
 
       - name: Delete old images
-        uses: actions/delete-package-versions@v5
+        uses: dataaxiom/ghcr-cleanup-action@v1
         with:
-          package-name: ${{ github.event.repository.name }}
-          package-type: container
-          min-versions-to-keep: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
-          ignore-versions: '^latest$'
+          keep-n-tagged: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
+          keep-n-untagged: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
+          exclude-tags: latest
+          delete-partial-images: true
