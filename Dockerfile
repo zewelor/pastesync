@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26-trixie AS base
+FROM --platform=$BUILDPLATFORM golang:1.27-trixie AS base
 ENV GOTOOLCHAIN=local
 
 FROM base AS deps
