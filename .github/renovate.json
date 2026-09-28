@@ -7,5 +7,15 @@
   "separateMinorPatch": true,
   "github-actions": {
     "enabled": true
-  }
+  },
+  "packageRules": [
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "automerge": true,
+      "automergeType": "branch",
+      "platformAutomerge": false
+    }
+  ]
 }
