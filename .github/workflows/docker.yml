@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - "renovate/**"
     tags:
       - "v*"
     paths-ignore:
@@ -20,9 +21,7 @@ on:
       - "justfile"
       - "LICENSE"
 
-permissions:
-  contents: read
-  packages: write
+permissions: {}
 
 env:
   IMAGE_NAME: ghcr.io/zewelor/pastesync
@@ -30,6 +29,8 @@ env:
 
 jobs:
   test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     env:
       PRE_COMMIT_HOME: ${{ github.workspace }}/.cache/pre-commit
@@ -74,7 +75,10 @@ jobs:
   docker:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
