@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.27-trixie AS base
+FROM --platform=$BUILDPLATFORM golang:1.27.4-trixie AS base
 ENV GOTOOLCHAIN=local
 
 FROM base AS deps
@@ -13,6 +13,7 @@ RUN go mod download
 FROM deps AS validate
 COPY main.go main_test.go ./
 COPY web ./web
+RUN go mod tidy -diff
 RUN go test ./...
 RUN CGO_ENABLED=0 go build -buildvcs=false -trimpath ./...
 
