@@ -184,3 +184,6 @@ Qualifying pushes to `main` and pushes of `v*` tags build and publish multi-arch
 *   `linux/arm64`
 
 Images are tagged with `latest`, branch names, tags (`v*`), and git commit SHAs (`sha-*`).
+
+Renovate tracks Go, Docker build images, GitHub Actions, and pre-commit hook revisions.
+GitHub Actions updates are automerged through pull requests after their checks pass; pushes to Renovate branches do not run a second copy of CI.
