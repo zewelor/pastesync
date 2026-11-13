@@ -32,6 +32,7 @@ env:
 
 jobs:
   test:
+    timeout-minutes: 15
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -40,8 +41,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python
+        id: python
         uses: actions/setup-python@v7
         with:
           python-version: '3.x'
@@ -50,10 +54,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
-          key: pre-commit-${{ runner.os }}-py3.x-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
-            pre-commit-${{ runner.os }}-py3.x-
-            pre-commit-${{ runner.os }}-
+            pre-commit-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-
 
       - name: Install pre-commit
         run: python -m pip install pre-commit
@@ -69,13 +72,11 @@ jobs:
         with:
           context: .
           target: validate
-          load: true
-          cache-from: |
-            type=gha,scope=validate-${{ github.ref_name }}
-            type=gha,scope=validate-main
-          cache-to: type=gha,mode=max,scope=validate-${{ github.ref_name }}
+          cache-from: type=gha,scope=validate
+          cache-to: type=gha,mode=max,scope=validate
 
   docker:
+    timeout-minutes: 15
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
@@ -85,9 +86,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
@@ -118,13 +118,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=gha,scope=build-${{ github.ref_name }}
-            type=gha,scope=build-main
-          cache-to: type=gha,mode=max,scope=build-${{ github.ref_name }}
+          cache-from: type=gha,scope=build
+          cache-to: type=gha,mode=max,scope=build
 
       - name: Delete old images
-        uses: dataaxiom/ghcr-cleanup-action@v1
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
           keep-n-tagged: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
           keep-n-untagged: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}

@@ -13,7 +13,7 @@ PasteSync is a minimal, secure, in-memory shared paste bin designed for moving t
 *   **Zero Persistence:** No login, no accounts, no PIN, and no database. Everything lives in-process memory only.
 *   **Auto-Cleanup:** The paste is automatically cleared after inactivity.
 *   **Last-Write-Wins:** Simple conflict resolution — the last save wins.
-*   **Docker-First:** Ultra-small, secure multistage distroless non-root runtime with no external dependencies.
+*   **Docker-First:** Ultra-small multistage `scratch` image with a static Go binary, a non-root user, and no external dependencies.
 
 ---
 
@@ -24,7 +24,7 @@ PasteSync is a minimal, secure, in-memory shared paste bin designed for moving t
 *   🔄 **Real-Time Sync:** Instant updates across all active browser windows/devices using Server-Sent Events (SSE).
 *   ⏱️ **Inactivity TTL:** Automatically clears the paste after a configurable period of inactivity.
 *   🩺 **Orchestrator-Friendly:** Built-in `/healthz` health check endpoint with access logging disabled to keep container logs clean.
-*   🛡️ **Hardened Sandbox:** Distroless non-root base container running with dropped capabilities (`CAP_DROP`) and a read-only root filesystem.
+*   🛡️ **Hardened Sandbox:** Non-root container running with dropped capabilities (`CAP_DROP`) and a read-only root filesystem in the provided Compose configuration.
 *   📱 **Favicon & PWA Support:** Native SVG favicons for desktop browsers and Android web app manifest support.
 
 ---
@@ -118,14 +118,7 @@ readinessProbe:
   periodSeconds: 10
 ```
 
-#### Docker Compose
-```yaml
-healthcheck:
-  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/healthz"]
-  interval: 10s
-  timeout: 5s
-  retries: 3
-```
+For Docker Compose, probe `http://localhost:8080/healthz` from the host or an external monitor. The `scratch` image contains only the application binary, so in-container checks using `wget`, `curl`, or a shell are unavailable.
 
 ---
 
@@ -184,6 +177,8 @@ Qualifying pushes to `main` and pushes of `v*` tags build and publish multi-arch
 *   `linux/arm64`
 
 Images are tagged with `latest`, branch names, tags (`v*`), and git commit SHAs (`sha-*`).
+
+Builds run on one AMD64 runner and cross-compile the static Go binary for both architectures. All build-stage commands run on `$BUILDPLATFORM`, so QEMU and separate ARM build runners are unnecessary. This checks compilation for both targets; it does not run the ARM binary.
 
 Renovate tracks Go, Docker build images, GitHub Actions, and pre-commit hook revisions.
 GitHub Actions updates are automerged through pull requests after their checks pass; pushes to Renovate branches do not run a second copy of CI.
