@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - "renovate/**"
     tags:
       - "v*"
     paths-ignore:
@@ -22,6 +21,10 @@ on:
       - "LICENSE"
 
 permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   IMAGE_NAME: ghcr.io/zewelor/pastesync
