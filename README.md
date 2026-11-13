@@ -56,7 +56,9 @@ https://raw.githubusercontent.com/zewelor/pastesync/main/icons/pastesync-homepag
 ## ⚠️ Limitations
 
 *   **In-Memory Only:** Container restarts, pod reschedules, or deployments will clear the paste.
+    Open tabs resynchronize after a restart; unsaved local edits remain in the editor and are retried through autosave.
 *   **No Built-In Auth:** Access control should be handled at the network, reverse proxy, or ingress layer if public access needs to be restricted.
+*   **Unsaved Changes:** Leaving or reloading a page with an unacknowledged edit triggers the browser's unsaved-changes warning. Cancel navigation to let autosave finish. Browsers require prior user interaction to show this warning; mobile process termination can bypass it. Unsaved text has no durable recovery.
 
 ---
 
@@ -155,6 +157,14 @@ docker build --target validate .
 docker build -t pastesync .
 docker run --rm -p 8080:8080 pastesync
 ```
+
+Run the frontend synchronization regression tests with Node.js LTS (no npm dependencies):
+
+```bash
+node --test tests/app.test.cjs
+```
+
+These tests cover restarts, delayed save responses, concurrent edits, retries, request-size errors, and navigation with unsaved text. GitHub Actions runs them before image publication.
 
 ---
 

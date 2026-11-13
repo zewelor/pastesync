@@ -5,7 +5,9 @@ const clearButton = document.getElementById('clearButton');
 
 
 let currentRevision = -1;
-let isApplyingRemote = false;
+let currentGeneration = null;
+let syncEpoch = 0;
+let events = null;
 let saveTimer = null;
 let retryTimer = null;
 let localEditVersion = 0;
@@ -19,6 +21,24 @@ function setStatus(text, state = 'idle') {
   statusEl.dataset.state = state;
 }
 
+function guardUnsavedChanges(event) {
+  event.preventDefault();
+  event.returnValue = true;
+}
+
+function updateNavigationGuard() {
+  if (dirty || saveInFlight) {
+    window.addEventListener('beforeunload', guardUnsavedChanges);
+  } else {
+    window.removeEventListener('beforeunload', guardUnsavedChanges);
+  }
+}
+
+function setDirty(value) {
+  dirty = value;
+  updateNavigationGuard();
+}
+
 function unlockEditor() {
   editor.readOnly = false;
 }
@@ -30,9 +50,7 @@ function updateContentButtons() {
 }
 
 function setEditorValue(content) {
-  isApplyingRemote = true;
   editor.value = content;
-  isApplyingRemote = false;
   updateContentButtons();
 }
 
@@ -43,17 +61,32 @@ function canCopy() {
 
 
 async function loadPaste() {
+  const epoch = syncEpoch;
   const response = await fetch('/api/paste', { cache: 'no-store' });
   if (!response.ok) {
     throw new Error('load failed');
   }
   const snapshot = await response.json();
-  applySnapshot(snapshot, false, true);
+  if (acceptGeneration(snapshot, epoch)) {
+    applySnapshot(snapshot, false);
+  }
 }
 
-function clearTimers() {
-  window.clearTimeout(saveTimer);
-  window.clearTimeout(retryTimer);
+function acceptGeneration(snapshot, epoch) {
+  if (epoch !== syncEpoch) {
+    return false;
+  }
+  if (snapshot.generation !== currentGeneration) {
+    currentGeneration = snapshot.generation;
+    currentRevision = -1;
+    pendingRemoteSnapshot = null;
+    syncEpoch += 1;
+    // Fence queued callbacks from the previous server's event stream.
+    if (events) {
+      connectEvents();
+    }
+  }
+  return true;
 }
 
 function scheduleQueuedSave(delay = 350) {
@@ -73,13 +106,13 @@ function scheduleRetry(delay = 1500) {
   }, delay);
 }
 
-function applySnapshot(snapshot, markRemote = true, force = false) {
-  if (!force && snapshot.revision <= currentRevision) {
+function applySnapshot(snapshot, markRemote = true) {
+  if (snapshot.revision <= currentRevision) {
     return;
   }
   currentRevision = snapshot.revision;
   setEditorValue(snapshot.content || '');
-  dirty = false;
+  setDirty(false);
   pendingRemoteSnapshot = null;
   if (markRemote) {
     setStatus('Synced', 'saved');
@@ -95,7 +128,7 @@ function applyPendingRemoteIfIdle() {
 }
 
 function markSaveFailed() {
-  dirty = true;
+  setDirty(true);
   if (!navigator.onLine) {
     setStatus('Offline', 'error');
     return;
@@ -111,9 +144,11 @@ async function savePaste() {
   }
 
   saveInFlight = true;
+  updateNavigationGuard();
   queuedSave = false;
   const submittedEditVersion = localEditVersion;
   const submittedContent = editor.value;
+  const epoch = syncEpoch;
   setStatus('Saving', 'saving');
 
   try {
@@ -124,7 +159,7 @@ async function savePaste() {
     });
 
     if (response.status === 413) {
-      dirty = true;
+      setDirty(true);
       setStatus('Too large', 'error');
       return;
     }
@@ -133,22 +168,30 @@ async function savePaste() {
     }
 
     const snapshot = await response.json();
+    // SSE may have already announced the generation reached by this PUT.
+    if (snapshot.generation !== currentGeneration && !acceptGeneration(snapshot, epoch)) {
+      setDirty(true);
+      queuedSave = true;
+      setStatus('Unsaved', 'dirty');
+      return;
+    }
     const hasNewLocalEdits = localEditVersion !== submittedEditVersion;
 
     currentRevision = Math.max(currentRevision, snapshot.revision);
+    queuedSave = hasNewLocalEdits;
 
     if (hasNewLocalEdits) {
-      dirty = true;
-      queuedSave = true;
+      setDirty(true);
       setStatus('Unsaved', 'dirty');
     } else {
-      dirty = false;
+      setDirty(false);
       setStatus('Saved', 'saved');
     }
   } catch {
     markSaveFailed();
   } finally {
     saveInFlight = false;
+    updateNavigationGuard();
     if (queuedSave) {
       queuedSave = false;
       scheduleQueuedSave();
@@ -160,10 +203,7 @@ async function savePaste() {
 }
 
 function scheduleSave() {
-  if (isApplyingRemote) {
-    return;
-  }
-  dirty = true;
+  setDirty(true);
   window.clearTimeout(retryTimer);
 
   setStatus(pendingRemoteSnapshot ? 'Remote update pending' : 'Unsaved', 'dirty');
@@ -171,9 +211,17 @@ function scheduleSave() {
 }
 
 function connectEvents() {
-  const events = new EventSource('/api/events');
+  if (events) {
+    events.close();
+  }
+  const source = new EventSource('/api/events');
+  const epoch = syncEpoch;
+  events = source;
 
-  events.addEventListener('open', () => {
+  source.addEventListener('open', () => {
+    if (epoch !== syncEpoch) {
+      return;
+    }
     if (dirty) {
       setStatus(pendingRemoteSnapshot ? 'Remote update pending' : 'Unsaved', 'dirty');
     } else {
@@ -181,12 +229,18 @@ function connectEvents() {
     }
   });
 
-  events.addEventListener('error', () => {
+  source.addEventListener('error', () => {
+    if (epoch !== syncEpoch) {
+      return;
+    }
     setStatus(dirty ? 'Offline' : 'Reconnecting', dirty ? 'error' : 'saving');
   });
 
-  events.addEventListener('paste', (event) => {
+  source.addEventListener('paste', (event) => {
     const snapshot = JSON.parse(event.data);
+    if (!acceptGeneration(snapshot, epoch)) {
+      return;
+    }
     if (snapshot.revision <= currentRevision) {
       return;
     }
@@ -260,15 +314,3 @@ loadPaste()
     setStatus('Load failed', 'error');
     connectEvents();
   });
-
-window.addEventListener('beforeunload', () => {
-  clearTimers();
-  if (dirty) {
-    fetch('/api/paste', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: editor.value }),
-      keepalive: true
-    }).catch(() => {});
-  }
-});

@@ -64,6 +64,14 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 'lts/*'
+
+      - name: Test browser synchronization logic
+        run: node --test tests/app.test.cjs
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 

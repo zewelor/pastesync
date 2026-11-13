@@ -10,6 +10,99 @@ import (
 	"time"
 )
 
+func TestPasteStoreGenerationSurvivesWritesAndChangesOnRestart(t *testing.T) {
+	generation := func(snapshot pasteSnapshot) string {
+		t.Helper()
+		data, err := json.Marshal(snapshot)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var decoded struct {
+			Generation string `json:"generation"`
+		}
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			t.Fatal(err)
+		}
+		return decoded.Generation
+	}
+	store := newPasteStore()
+	initial := generation(store.snapshot())
+	if initial == "" {
+		t.Fatal("snapshot must identify the server generation")
+	}
+	if got := generation(store.set("first write")); got != initial {
+		t.Fatal("writing changed the server generation")
+	}
+	store.updatedAt = time.Now().Add(-2 * time.Hour)
+	expired, cleared := store.clearIfExpired(time.Hour)
+	if !cleared || generation(expired) != initial {
+		t.Fatal("TTL cleanup must preserve the server generation")
+	}
+	restarted := newPasteStore().snapshot()
+	if generation(restarted) == initial || generation(restarted) == "" {
+		t.Fatal("a new store must have a new generation")
+	}
+	if restarted.Revision != 0 {
+		t.Fatal("a new generation must start at revision zero")
+	}
+}
+
+func TestPasteStoreSubscriptionInitialLatestAndUnsubscribe(t *testing.T) {
+	store := newPasteStore()
+	initial := store.set("initial")
+	updates, unsubscribe := store.subscribe()
+	if got := <-updates; got != initial {
+		t.Fatalf("initial snapshot = %+v, want %+v", got, initial)
+	}
+	store.set("intermediate")
+	latest := store.set("latest")
+	if got := <-updates; got != latest {
+		t.Fatalf("coalesced snapshot = %+v, want %+v", got, latest)
+	}
+	unsubscribe()
+	if _, open := <-updates; open {
+		t.Fatal("unsubscribe must close the event stream")
+	}
+	store.set("after unsubscribe")
+}
+
+func TestPasteStoreSubscribeDuringWrites(t *testing.T) {
+	const attempts = 500
+	results := make(chan bool, attempts)
+	for range attempts {
+		store := newPasteStore()
+		start := make(chan struct{})
+		written := make(chan struct{})
+		go func() {
+			<-start
+			for range 3 {
+				store.set("concurrent write")
+			}
+			close(written)
+		}()
+		go func() {
+			<-start
+			updates, unsubscribe := store.subscribe()
+			defer unsubscribe()
+			<-written
+			results <- (<-updates == store.snapshot())
+		}()
+		close(start)
+	}
+	timeout := time.NewTimer(5 * time.Second)
+	defer timeout.Stop()
+	for range attempts {
+		select {
+		case latest := <-results:
+			if !latest {
+				t.Fatal("subscription lost the latest concurrent write")
+			}
+		case <-timeout.C:
+			t.Fatal("subscribe blocked during concurrent writes")
+		}
+	}
+}
+
 func TestPasteStoreClearIfExpired(t *testing.T) {
 	store := newPasteStore()
 	store.set("hello")

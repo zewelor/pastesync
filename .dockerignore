@@ -5,6 +5,7 @@
 *.md
 docs/
 icons/
+tests/
 /*.toml
 /*.yml
 /*.yaml

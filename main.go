@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"embed"
 	"encoding/json"
 	"errors"
@@ -26,29 +27,33 @@ const (
 )
 
 type pasteSnapshot struct {
-	Content  string `json:"content"`
-	Revision uint64 `json:"revision"`
+	Content    string `json:"content"`
+	Generation string `json:"generation"`
+	Revision   uint64 `json:"revision"`
 }
 
 type pasteStore struct {
-	mu        sync.RWMutex
-	content   string
-	revision  uint64
-	updatedAt time.Time
-	subs      map[chan pasteSnapshot]struct{}
+	mu         sync.RWMutex
+	content    string
+	generation string
+	revision   uint64
+	updatedAt  time.Time
+	subs       map[chan pasteSnapshot]struct{}
 }
 
 func newPasteStore() *pasteStore {
 	return &pasteStore{
-		updatedAt: time.Now().UTC(),
-		subs:      make(map[chan pasteSnapshot]struct{}),
+		generation: rand.Text(),
+		updatedAt:  time.Now().UTC(),
+		subs:       make(map[chan pasteSnapshot]struct{}),
 	}
 }
 
 func (s *pasteStore) snapshotLocked() pasteSnapshot {
 	return pasteSnapshot{
-		Content:  s.content,
-		Revision: s.revision,
+		Content:    s.content,
+		Generation: s.generation,
+		Revision:   s.revision,
 	}
 }
 
@@ -96,8 +101,8 @@ func (s *pasteStore) subscribe() (<-chan pasteSnapshot, func()) {
 	s.mu.Lock()
 	s.subs[ch] = struct{}{}
 	snapshot := s.snapshotLocked()
-	s.mu.Unlock()
 	ch <- snapshot
+	s.mu.Unlock()
 	return ch, func() {
 		s.mu.Lock()
 		delete(s.subs, ch)
