@@ -179,7 +179,7 @@ docker compose up --build
 
 ### GitHub Actions CI/CD
 
-The repository automatically builds and publishes multi-architecture images to GitHub Packages (`ghcr.io/zewelor/pastesync`) for the following architectures:
+Qualifying pushes to `main` and pushes of `v*` tags build and publish multi-architecture images to GitHub Packages (`ghcr.io/zewelor/pastesync`) for the following architectures:
 *   `linux/amd64`
 *   `linux/arm64`
 
