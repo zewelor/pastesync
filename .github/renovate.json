@@ -16,7 +16,7 @@
         "github-actions"
       ],
       "matchDepTypes": ["action"],
-      "automergeType": "branch",
+      "automergeType": "pr",
       "platformAutomerge": false
     }
   ]
