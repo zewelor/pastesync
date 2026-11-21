@@ -186,7 +186,7 @@ Qualifying pushes to `main` and pushes of `v*` tags build and publish multi-arch
 *   `linux/amd64`
 *   `linux/arm64`
 
-Images are tagged with `latest`, branch names, tags (`v*`), and git commit SHAs (`sha-*`).
+Images are tagged with `latest`, branch names, and tags (`v*`).
 
 Builds run on one AMD64 runner and cross-compile the static Go binary for both architectures. All build-stage commands run on `$BUILDPLATFORM`, so QEMU and separate ARM build runners are unnecessary. This checks compilation for both targets; it does not run the ARM binary.
 
