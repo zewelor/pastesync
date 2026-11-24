@@ -28,7 +28,6 @@ concurrency:
 
 env:
   IMAGE_NAME: ghcr.io/zewelor/pastesync
-  OLD_IMAGE_VERSIONS_TO_KEEP: 30
 
 jobs:
   test:
@@ -84,6 +83,10 @@ jobs:
           cache-to: type=gha,mode=max,scope=validate
 
   docker:
+    concurrency:
+      group: ghcr-${{ github.repository }}
+      queue: max
+      cancel-in-progress: false
     timeout-minutes: 15
     needs: test
     runs-on: ubuntu-latest
@@ -127,11 +130,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=build
           cache-to: type=gha,mode=max,scope=build
-
-      - name: Delete old images
-        uses: dataaxiom/ghcr-cleanup-action@ac45a8c04b1eb4b27974ca79a0a74f344c93664b # v1.3.0
-        with:
-          keep-n-tagged: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
-          keep-n-untagged: ${{ env.OLD_IMAGE_VERSIONS_TO_KEEP }}
-          exclude-tags: latest
-          delete-partial-images: true
