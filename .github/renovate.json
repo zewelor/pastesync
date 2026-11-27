@@ -5,7 +5,6 @@
     "github>zewelor/renovate-config//presets/github-actions",
     "github>zewelor/renovate-config//presets/go"
   ],
-  "separateMinorPatch": true,
   "github-actions": {
     "enabled": true
   },
